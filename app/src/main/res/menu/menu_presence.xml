@@ -1,0 +1,21 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="de.thral.presencemonitor.PresenceActivity">
+
+    <item
+        android:id="@+id/menu_addPerson"
+        android:orderInCategory="100"
+        android:title="@string/action_addPerson"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/menu_chosen_modify"
+        android:orderInCategory="100"
+        android:title="@string/action_chosen"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/menu_entered"
+        android:orderInCategory="100"
+        android:title="@string/action_entered"
+        app:showAsAction="never" />
+</menu>

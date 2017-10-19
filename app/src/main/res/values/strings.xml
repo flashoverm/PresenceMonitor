@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Anwesenheitsliste</string>
+    <string name="action_chosen">Alle ausgewählt</string>
+    <string name="action_addPerson">Person hinzufügen</string>
+    <string name="action_entered">Eingegeben</string>
+    <string name="action_modify">Bearbeiten</string>
+    <string name="not_selected">Es wurde niemand ausgewählt </string>
+    <string name="hint_firstname">Vorname</string>
+    <string name="hint_lastname">Nachname</string>
+    <string name="dialog_ok">OK</string>
+    <string name="dialog_cancel">Abbrechen</string>
+</resources>
