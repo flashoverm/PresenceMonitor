@@ -4,7 +4,7 @@ package de.thral.presencemonitor.person;
  * Created by Markus Thral on 18.10.2017.
  */
 
-public class Person {
+public class Person implements Comparable<Person>{
 
     private final String firstName;
     private final String lastName;
@@ -70,5 +70,10 @@ public class Person {
         int result = firstName != null ? firstName.hashCode() : 0;
         result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public int compareTo(Person person) {
+        return this.lastName.compareTo(person.getLastName());
     }
 }

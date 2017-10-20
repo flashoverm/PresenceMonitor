@@ -14,6 +14,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -47,22 +48,12 @@ public class StorageLayer {
         return persons;
     }
 
-    public List<Person> getAllPersons(){
+    private List<Person> getAllPersons(){
         try {
             return this.readJson(folder.getPath() + "/" + PERSONS_PATH);
         } catch (FileNotFoundException e){
             return new LinkedList<>();
         }
-    }
-
-    public List<Person> getPersonsPresent() {
-        List<Person> present = new LinkedList<>();
-        for(Person person : getAllPersons()){
-            if(person.isPresent()){
-                present.add(person);
-            }
-        }
-        return present;
     }
 
     public boolean isFiltered(){
@@ -115,6 +106,7 @@ public class StorageLayer {
             }
             filter = true;
         }
+        Collections.sort(persons);
         return filter;
     }
 
@@ -125,10 +117,11 @@ public class StorageLayer {
             }
         }
         filter = false;
+        Collections.sort(persons);
     }
 
-
     private boolean savePersons(){
+        Collections.sort(persons);
         return this.writeJson(folder.getPath()+"/"+PERSONS_PATH, persons);
     }
 
@@ -145,7 +138,9 @@ public class StorageLayer {
 
     private List<Person> readJson(String path) throws FileNotFoundException {
         JsonReader reader = new JsonReader(new FileReader(path));
-        return gson.fromJson(reader, PERSON_TYPE);
+        List<Person> personList = gson.fromJson(reader, PERSON_TYPE);
+        Collections.sort(personList);
+        return personList;
     }
 
 }
