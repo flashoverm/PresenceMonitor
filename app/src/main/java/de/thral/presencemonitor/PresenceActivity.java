@@ -14,9 +14,6 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import java.util.Iterator;
-import java.util.List;
-
 import de.thral.presencemonitor.person.Person;
 import de.thral.presencemonitor.person.PersonAdapter;
 
@@ -28,9 +25,7 @@ public class PresenceActivity extends AppCompatActivity {
 
     private AdapterView.OnItemClickListener clickListener;
     private AdapterView.OnItemLongClickListener longClickListener;
-
-    private List<Person> personList;
-    private boolean filter;
+    private Toast nothingSelected;
 
     private Menu menu;
 
@@ -42,14 +37,12 @@ public class PresenceActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         storage = new StorageLayer(getApplicationContext());
-        personList = storage.getAllPersons();
 
         clickListener = new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 Person clicked = (Person) adapterView.getAdapter().getItem(i);
-                clicked.tooglePresence();
-                storage.updatePerson(clicked);
+                storage.tooglePresence(clicked);
                 updateList();
             }
         };
@@ -58,22 +51,25 @@ public class PresenceActivity extends AppCompatActivity {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
                 Person clicked = (Person) adapterView.getAdapter().getItem(i);
-
-                personList.remove(clicked);
-                storage.updatePersons(personList);
+                storage.removePerson(clicked);
                 updateList();
                 return true;
             }
         };
 
+        nothingSelected = Toast.makeText(
+                this.getApplicationContext(), R.string.not_selected, Toast.LENGTH_LONG
+        );
+
         personListView = (ListView) findViewById(R.id.list_persons);
         personAdapter = new PersonAdapter(
-                this.getBaseContext(), R.layout.listitem_person, personList
+                this.getBaseContext(), R.layout.listitem_person, storage
         );
         personListView.setAdapter(personAdapter);
-        updateList();
         personListView.setOnItemClickListener(clickListener);
         personListView.setOnItemLongClickListener(longClickListener);
+
+        updateList();
     }
 
     @Override
@@ -81,6 +77,7 @@ public class PresenceActivity extends AppCompatActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_presence, menu);
         this.menu = menu;
+        menu.findItem(R.id.menu_entered).setVisible(false);
         return true;
     }
 
@@ -94,20 +91,25 @@ public class PresenceActivity extends AppCompatActivity {
             return true;
         }
         else if(id == R.id.menu_chosen_modify) {
-            if(!filter && filterForPresent()){
-                item.setTitle(R.string.action_modify);
-                menu.findItem(R.id.menu_entered).setVisible(true);
-                menu.findItem(R.id.menu_addPerson).setVisible(false);
-                personListView.setOnItemClickListener(null);
-                personListView.setOnItemLongClickListener(null);
+            if(!storage.isFiltered()){
+                if(storage.filterForPresent()){
+                    item.setTitle(R.string.action_modify);
+                    menu.findItem(R.id.menu_entered).setVisible(true);
+                    menu.findItem(R.id.menu_addPerson).setVisible(false);
+                    personListView.setOnItemClickListener(null);
+                    personListView.setOnItemLongClickListener(null);
+                } else {
+                    nothingSelected.show();
+                }
             } else {
-                removeFilter();
+                storage.removeFilter();
                 item.setTitle(R.string.action_chosen);
                 menu.findItem(R.id.menu_entered).setVisible(false);
                 menu.findItem(R.id.menu_addPerson).setVisible(true);
                 personListView.setOnItemClickListener(clickListener);
                 personListView.setOnItemLongClickListener(longClickListener);
             }
+            updateList();
             return true;
         }
         else if(id == R.id.menu_entered) {
@@ -117,53 +119,16 @@ public class PresenceActivity extends AppCompatActivity {
             personListView.setOnItemClickListener(clickListener);
             personListView.setOnItemLongClickListener(longClickListener);
 
-            removeFilter();
-            for(Person person : personList){
-                person.setPresent(false);
-            }
-            storage.updatePersons(personList);
+            storage.tooglePresentRemoveFilter();
             updateList();
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    private void removeFilter(){
-        for(Person person: storage.getAllPersons()){
-            if(!personList.contains(person)){
-                personList.add(person);
-            }
-        }
-        updateList();
-        this.filter = false;
-    }
-
-    private boolean filterForPresent() {
-        List<Person> present = storage.getPersonsPresent();
-        if(present.size() == 0) {
-            Toast toast = Toast.makeText(getApplicationContext(), R.string.not_selected, Toast.LENGTH_LONG);
-            toast.show();
-            this.filter = false;
-            return false;
-        }
-
-        Iterator<Person> iterator = personList.iterator();
-        Person person;
-        while(iterator.hasNext()){
-            person = iterator.next();
-            if(!person.isPresent()){
-                iterator.remove();
-            }
-        }
-        updateList();
-        this.filter = true;
-        return filter;
-    }
-
     private void updateList(){
         if(personAdapter != null){
             personAdapter.notifyDataSetChanged();
-            PersonAdapter.setListViewHeightBasedOnChildren(personListView);
         }
     }
 
@@ -178,11 +143,10 @@ public class PresenceActivity extends AppCompatActivity {
                         EditText firstName = (EditText)dialogView.findViewById(R.id.dialog_firstname);
                         EditText lastName = (EditText)dialogView.findViewById(R.id.dialog_lastname);
 
-                        personList.add(new Person(
-                                firstName.getText().toString(),
-                                lastName.getText().toString())
+                        storage.addPerson(new Person(
+                                        firstName.getText().toString(),
+                                        lastName.getText().toString())
                         );
-                        storage.updatePersons(personList);
                         updateList();
                     }
                 })

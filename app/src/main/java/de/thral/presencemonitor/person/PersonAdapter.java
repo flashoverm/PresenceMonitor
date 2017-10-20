@@ -13,6 +13,7 @@ import android.widget.TextView;
 import java.util.List;
 
 import de.thral.presencemonitor.R;
+import de.thral.presencemonitor.StorageLayer;
 
 /**
  * Created by Markus Thral on 18.10.2017.
@@ -21,8 +22,8 @@ import de.thral.presencemonitor.R;
 public class PersonAdapter extends ArrayAdapter<Person> {
     private Context context;
 
-    public PersonAdapter(Context context, int resource, List<Person> persons) {
-        super(context, resource, persons);
+    public PersonAdapter(Context context, int resource, StorageLayer persons) {
+        super(context, resource, persons.getPersonList());
         this.context = context;
     }
 

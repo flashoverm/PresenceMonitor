@@ -14,13 +14,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Type;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 import de.thral.presencemonitor.person.Person;
 
 /**
- * Created by Markus Thral on 18.10.2017.
+ * Created by Markus Thral on 19.10.2017.
  */
 
 public class StorageLayer {
@@ -31,9 +32,19 @@ public class StorageLayer {
     private File folder;
     private Gson gson;
 
+    private List<Person> persons;
+    private boolean filter;
+
+
     public StorageLayer(Context context){
         this.folder = context.getFilesDir();
         this.gson = new Gson();
+        this.persons = getAllPersons();
+        this.filter = false;
+    }
+
+    public List<Person> getPersonList(){
+        return persons;
     }
 
     public List<Person> getAllPersons(){
@@ -54,18 +65,71 @@ public class StorageLayer {
         return present;
     }
 
-    public boolean updatePersons(List<Person> updated){
-        return this.writeJson(folder.getPath()+"/"+PERSONS_PATH, updated);
+    public boolean isFiltered(){
+        return filter;
     }
 
-    public boolean updatePerson(Person updated) {
-        List<Person> list = getAllPersons();
-        for(Person person : list){
-            if(person.equals(updated)){
-                person.setPresent(updated.isPresent());
+    public boolean addPerson(Person person){
+        if(persons.add(person) && savePersons()){
+            return true;
+        }
+        return false;
+    }
+
+    public boolean removePerson(Person person){
+        if(persons.remove(person) && savePersons()) {
+            return true;
+        }
+        return false;
+    }
+
+    public void tooglePresence(Person person){
+        person.tooglePresence();
+        savePersons();
+    }
+
+    public void tooglePresentRemoveFilter(){
+        for(Person person : persons){
+            person.setPresent(false);
+        }
+        removeFilter();
+    }
+
+    public boolean filterForPresent(){
+        boolean onePresent = false;
+        for(Person person : persons){
+            if(person.isPresent()){
+                onePresent = true;
+                break;
             }
         }
-        return this.writeJson(folder.getPath()+"/"+PERSONS_PATH, list);
+
+        if(onePresent){
+            Iterator<Person> iterator = persons.iterator();
+            Person person;
+            while(iterator.hasNext()){
+                person = iterator.next();
+                if(!person.isPresent()){
+                    iterator.remove();
+                }
+            }
+            filter = true;
+        }
+        return filter;
+    }
+
+    public void removeFilter(){
+        for(Person person : getAllPersons()){
+            if(!persons.contains(person)){
+                persons.add(person);
+            }
+        }
+        filter = false;
+    }
+
+
+    private boolean savePersons(){
+        return this.writeJson(folder.getPath()+"/"+PERSONS_PATH, persons);
     }
 
     private boolean writeJson(String path, List<Person> list){
@@ -79,26 +143,9 @@ public class StorageLayer {
         return true;
     }
 
-    private List<Person> readJson(String path) throws FileNotFoundException{
+    private List<Person> readJson(String path) throws FileNotFoundException {
         JsonReader reader = new JsonReader(new FileReader(path));
         return gson.fromJson(reader, PERSON_TYPE);
     }
 
-
-    /*
-        Unused methods
-     */
-    public boolean addPerson(Person person){
-        List<Person> newList = this.getAllPersons();
-        newList.add(person);
-        return this.writeJson(folder.getPath()+"/"+PERSONS_PATH, newList);
-    }
-
-    public boolean removePerson(Person person){
-        List<Person> newList = this.getAllPersons();
-        if(newList.remove(person)){
-            return this.writeJson(folder.getPath()+"/"+PERSONS_PATH, newList);
-        }
-        return false;
-    }
 }
